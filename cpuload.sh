@@ -79,8 +79,8 @@ fi
 
 CPU_LOAD_DURATION_MIN=$(($CPU_LOAD_DURATION/60))
 
-NUMBER_OF_CORES=$(grep -c processor /proc/cpuinfo)          #Count starts from 0, 1, 2...
-CURRENT_CORE_NUMBER=0
+NUMBER_OF_CORES=$(grep -c processor /proc/cpuinfo)          
+CURRENT_CORE_NUMBER=0  #Count starts from 0, 1, 2...
 
 DESCRIPTION="$CPULIMIT% CPU load for $CPU_LOAD_DURATION seconds"
 
@@ -91,24 +91,43 @@ FILE="CPU_Load_$HOST""__$NOW.log"
 STARTUP_TIME=2
 
 
-echo "-------------------------------------------------------------------------------------------------------------" | tee -a $FILE
+echo "-----------------------------------------------------------------------\
+--------------------------------------" | tee -a $FILE
+
 echo "CPU load script." | tee -a $FILE
-echo "-------------------------------------------------------------------------------------------------------------" | tee -a $FILE
+
+echo "-----------------------------------------------------------------------\
+--------------------------------------" | tee -a $FILE
+
 echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Creating $FILE."  | tee -a $FILE
-echo "-------------------------------------------------------------------------------------------------------------" | tee -a $FILE
+
+echo "-----------------------------------------------------------------------\
+--------------------------------------" | tee -a $FILE
+
 echo "Starting $DESCRIPTION." | tee -a $FILE
+
 echo "Number of CPU cores: $NUMBER_OF_CORES." | tee -a $FILE
+
 echo "CPU load per core: $CPULIMIT%." | tee -a $FILE
+
 echo "CPU load duration: $CPU_LOAD_DURATION seconds." | tee -a $FILE
-echo "-------------------------------------------------------------------------------------------------------------" | tee -a $FILE
+
+echo "-----------------------------------------------------------------------\
+--------------------------------------" | tee -a $FILE
+
 echo "Date: $TODAY                     Host: $HOST" | tee -a $FILE
-echo "-------------------------------------------------------------------------------------------------------------" | tee -a $FILE
-echo "This script will run for $((CPU_LOAD_DURATION + STARTUP_TIME)) seconds." | tee -a $FILE
+
+echo "-----------------------------------------------------------------------\
+--------------------------------------" | tee -a $FILE
+echo "This script will run for $((CPU_LOAD_DURATION + STARTUP_TIME)) seconds.\
+" | tee -a $FILE
+
 echo
 
 if [ $CPULIMIT -gt $((0)) ]
 then
-   echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Starting stress to impose the CPU load on $HOST. It will take $STARTUP_TIME seconds." | tee -a $FILE
+   echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Starting stress to impose the \
+   CPU load on $HOST. It will take $STARTUP_TIME seconds." | tee -a $FILE
 
       # START stress HERE
       #Set the nice value to obtain a higher priority than other processes
@@ -122,7 +141,8 @@ then
    OMIT_PID=$(pidof stress | sed 's/^.* //')
    STRESS_PIDS=$(pidof stress -o $OMIT_PID)
 
-   echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Current stress PIDS, after the last stress PID has been removed: $STRESS_PIDS."
+   echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Current stress PIDS, after the \
+   last stress PID has been removed: $STRESS_PIDS."
 
       #Set the affinity for each process to a separate core
       #Limit the CPU usage per stress process/PID
@@ -133,7 +153,8 @@ then
       sudo taskset -pc $CURRENT_CORE_NUMBER $PID
       sudo cpulimit -p $PID -l $CPULIMIT & 
       
-      echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Current core number: $CURRENT_CORE_NUMBER." | tee -a $FILE
+      echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Current core number:\
+      $CURRENT_CORE_NUMBER." | tee -a $FILE
     
       if [ $CURRENT_CORE_NUMBER -eq $(($NUMBER_OF_CORES - 1)) ]
       then
@@ -142,11 +163,13 @@ then
           ((CURRENT_CORE_NUMBER++))
       fi
     
-      echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Next core number: $CURRENT_CORE_NUMBER." | tee -a $FILE
+      echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Next core number:\
+      $CURRENT_CORE_NUMBER." | tee -a $FILE
    done
 fi
 
-echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Running $CPULIMIT% CPU load for $CPU_LOAD_DURATION seconds." | tee -a $FILE
+echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Running $CPULIMIT% CPU load for \
+$CPU_LOAD_DURATION seconds." | tee -a $FILE
 
 if [ $CPU_LOAD_DURATION -lt $((59)) ]
 then
@@ -157,8 +180,14 @@ fi
 
    #TERMINATE stress HERE
    #Done automatically passing a --timeout parameter
-echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Terminating stress on $HOST." | tee -a $FILE
-echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => $DESCRIPTION has been completed." | tee -a $FILE
-echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Log data have been written into $FILE." | tee -a $FILE
+echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Terminating stress on \
+$HOST." | tee -a $FILE
+
+echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => $DESCRIPTION has been \
+completed." | tee -a $FILE
+
+echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => Log data have been written \
+into $FILE." | tee -a $FILE
+
 echo "[$(date +"%Y-%m-%d--%H:%M:%S")] => THIS IS THE END!" | tee -a $FILE
 
