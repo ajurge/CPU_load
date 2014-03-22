@@ -5,8 +5,7 @@ machines running Ubuntu.
 
 It requires *stress* and *cpulimit* to be installed on the target machine:
 
-	- sudo apt-get install stress
-	- sudo apt-get install cpulimit
+	- sudo apt-get install stress cpulimit
 
 Usage: 
 
