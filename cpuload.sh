@@ -15,7 +15,7 @@
 
 
 ###############################################################################
-# Define general functions to used by the script
+# Define general functions to be used by the script
 ###############################################################################
    
    # Usage: countdown "00:07:55"
