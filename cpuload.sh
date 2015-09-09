@@ -9,8 +9,8 @@
 #    sudo apt-get install stress cpulimit
 
 # Usage:
-#    ./cpuload.sh [cpu load in percent] [duration in seconds]
-#    ./cpuload.sh 25 10
+#    ./cpuload.sh [cpu load in percent] [duration in seconds] [cpu count]
+#    ./cpuload.sh 25 10 2
 ###############################################################################
 
 
@@ -55,10 +55,53 @@ function validate_duration_value {
    fi
 }
 
+function validate_cpu_count_value {
+#Check if entered cpu count is valid
+  if [[ $@ =~ ^-?[[:digit:]]+$ ]]
+      then
+         if [[ $@ -lt $((0)) ]]
+            then
+               echo "Error: Entered cpu count value is not valid."
+               echo "The value must be greater than 0." 
+               exit
+            else
+               CPU_COUNT=$@
+         fi
+      else
+         echo "Error: Entered cpu count value is not a number."
+        exit
+  fi
+}
+
+
+
+function cpuLimit_for_each_pid {
+#Retrieve all the stress process PIDS and omit the last PID of the parent process 
+   echo $@
+   OMIT_PID=$(pidof stress | sed 's/^.* //')
+   STRESS_PIDS=$(pidof stress -o $OMIT_PID)
+
+   # last stress PID has been removed: $STRESS_PIDS." | tee -a $FILE
+
+      #Set the affinity for each process to a separate core
+      #Limit the CPU usage per stress process/PID
+   array=(${STRESS_PIDS// / })
+   echo $1
+   for PID in "${array[@]}"
+   do
+   cpulimit_p_options="$cpulimit_p_options -p $PID"
+   echo $PID
+   sudo cpulimit -p $PID -l $1 &
+   done
+   
+}
+
+
+
 ###############################################################################
 # Start the script
 ###############################################################################
-USAGE="Usage: `basename $0` [cpu load in percent] [duration in seconds]"
+USAGE="Usage: `basename $0` [cpu load in percent] [duration in seconds] [cpu count]"
 
    # Print usage
 if [ "$1" == "-h" ] || [ "$1" == "-help" ]; then
@@ -67,11 +110,13 @@ if [ "$1" == "-h" ] || [ "$1" == "-help" ]; then
 fi
 
 # Check if there are two arguments
-if [ $# -eq 2 ]; then
+if [ $# -eq 3 ]; then
 
    # Validate input parameters.
    validate_cpu_load_value $1
    validate_duration_value $2
+   validate_cpu_count_value $3
+
 else
    echo "Error: the number of input arguments is incorrect!"
    echo $USAGE
@@ -80,12 +125,6 @@ fi
 
 # Clean the terminal screen and sudo
 #clear
-#sudo echo
-echo "CPU_LOAD_DURATION"
-echo $2 
-
-echo "CPULIMIT"
-echo $CPULIMIT 
 # Set the required parameters
 CPU_LOAD_DURATION_MIN=$(($CPU_LOAD_DURATION/60))
 
@@ -94,4 +133,6 @@ CURRENT_CORE_NUMBER=0  #Count starts from 0, 1, 2...
 
 DESCRIPTION="CPU load script"
 
-stress -c 1 -t $CPU_LOAD_DURATION  & cpulimit -p $( pidof -o $! stress ) -l $CPULIMIT
+stress -c $CPU_COUNT  -t $CPU_LOAD_DURATION  & 
+sleep 2
+cpuLimit_for_each_pid  $1
